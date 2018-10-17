@@ -26,14 +26,51 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 package phz
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello world")
+	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
+	switch r.Method {
+	case http.MethodGet: // ok!
+	default:
+		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	for _, v := range RestrictedPathKeywords {
+		if strings.Contains(r.URL.Path, v) {
+			http.Error(w, "bad url", http.StatusForbidden)
+			return
+		}
+	}
+
+	path := strings.Split(r.URL.Path, "/")
+	log.Println("Checking path[0]:", path[1])
+	switch path[1] {
+	case "bad":
+
+	case "phz":
+		s.handleGETphz(w, r, path[0:])
+	case "":
+		fmt.Println("Homepage:", r.URL.Path)
+		// homepage
+	case "a":
+		fmt.Println("AAA")
+	case "stats":
+		fmt.Println(time.Now().UTC())
+	default:
+		http.NotFound(w, r)
+	}
+}
+
+func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, splitpath []string) {
+	log.Println("PHZ:", splitpath)
 }

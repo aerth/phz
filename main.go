@@ -31,9 +31,9 @@ package main // import "x/phzd"
 import (
 	"flag"
 	"log"
+	serverlib "x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
-	serverlib "x/phzd/phz"
 )
 
 func main() {
@@ -48,11 +48,9 @@ func main() {
 	config := serverlib.NewDefaultConfig()
 	if *addrflag != "" {
 		config.Addr = *addrflag
-	}
-	if _, err := toml.DecodeFile(*confpath, config); err != nil {
+	} else if _, err := toml.DecodeFile(*confpath, config); err != nil {
 		log.Fatalln(err)
 	}
-
 	srv := serverlib.NewServer(*config)
 	log.Println("Serving http://" + config.Addr)
 	log.Fatalln(srv.ListenAndServe())
