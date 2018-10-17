@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -52,21 +53,34 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if strings.HasSuffix(r.URL.Path, "/") {
+		r.URL.Path += "index.phz"
+	}
+	if strings.HasSuffix(r.URL.Path, ".html") {
+		r.URL.Path = strings.TrimSuffix(r.URL.Path, ".html")
+		r.URL.Path += ".phz"
+	}
 	path := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
 	log.Println("Checking path[0]:", path[0])
 	switch path[0] {
-	case "bad":
-	case "phz":
-		s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
-	case "":
-		fmt.Println("Homepage:", r.URL.Path)
-		// homepage
+	default:
+		split := strings.Split(r.URL.Path, "/")
+		if len(split) > 1 {
+			if strings.HasSuffix(split[len(split)-1], ".phz") {
+				s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
+				return
+			} else {
+				log.Println("not found:", r.URL.Path, split[len(split)-1])
+				http.ServeFile(w, r, filepath.Join(s.config.TemplatePath, r.URL.Path))
+				return
+			}
+		}
+		http.NotFound(w, r)
+		return
 	case "a":
 		fmt.Println("AAA")
 	case "stats":
 		fmt.Println(time.Now().UTC())
-	default:
-		http.NotFound(w, r)
 	}
 }
 

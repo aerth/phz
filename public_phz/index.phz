@@ -2,7 +2,7 @@
 
 this is the homepage! woohoo
 
-
+![img](a100.png)
 
 The time is: {{.now}}
 

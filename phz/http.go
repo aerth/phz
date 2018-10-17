@@ -55,7 +55,8 @@ type Server struct {
 
 func NewDefaultConfig() *Config {
 	return &Config{
-		Addr: "127.0.0.1:8000",
+		Addr:         "127.0.0.1:8000",
+		TemplatePath: "./",
 	}
 }
 

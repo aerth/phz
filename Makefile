@@ -32,9 +32,9 @@ install:
 	@mv ${NAME} ${PREFIX}/${NAME}
 	@echo 'Successfully installed ${NAME} to ${PREFIX}'
 
-run:
-	go run -v -x $(shell ls *.go | grep -v _test.go)
-
-
 clean:
 	@rm -v ${NAME}
+
+run:
+	./phzd -conf config.toml.default -addr 0.0.0.0:8080
+	

@@ -45,7 +45,7 @@ func (s *Server) gettemplatestring(name string) string {
 	if name == "/" {
 		name = "index"
 	}
-	b, err := ioutil.ReadFile(filepath.Join(s.config.TemplatePath, name+".phz"))
+	b, err := ioutil.ReadFile(filepath.Join(s.config.TemplatePath, name))
 	if err != nil {
 		log.Println("Templates:", err)
 		return "errar 3"
