@@ -26,7 +26,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 package main // import "x/phzd"
 
 import (
@@ -55,6 +54,7 @@ func main() {
 	}
 
 	srv := serverlib.NewServer(*config)
+	log.Println("Serving http://" + config.Addr)
 	log.Fatalln(srv.ListenAndServe())
 
 }
