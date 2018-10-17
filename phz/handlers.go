@@ -52,13 +52,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	path := strings.Split(r.URL.Path, "/")
-	log.Println("Checking path[0]:", path[1])
-	switch path[1] {
+	path := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
+	log.Println("Checking path[0]:", path[0])
+	switch path[0] {
 	case "bad":
-
 	case "phz":
-		s.handleGETphz(w, r, path[0:])
+		s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
 	case "":
 		fmt.Println("Homepage:", r.URL.Path)
 		// homepage
@@ -71,6 +70,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, splitpath []string) {
-	log.Println("PHZ:", splitpath)
+func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, pathnoslash string) {
+	log.Println("PHZ:", pathnoslash)
+	if err := s.ServeTemplate(w, r, pathnoslash); err != nil {
+		log.Println("servtemplate:", err)
+	}
 }

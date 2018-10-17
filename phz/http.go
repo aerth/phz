@@ -29,6 +29,7 @@
 package phz
 
 import (
+	"html/template"
 	"net/http"
 	"sync"
 )
@@ -39,13 +40,17 @@ var RestrictedPathKeywords = []string{
 }
 
 type Config struct {
-	Addr string
+	Addr         string
+	TemplatePath string
 }
 
 type Server struct {
 	config Config
-	mu     *sync.Mutex
+	mu     *sync.Mutex // guards global data map
 	data   map[string]interface{}
+
+	templates    map[string]*template.Template
+	templatelock *sync.Mutex // guards template map
 }
 
 func NewDefaultConfig() *Config {
@@ -56,9 +61,11 @@ func NewDefaultConfig() *Config {
 
 func NewServer(c Config) *Server {
 	return &Server{
-		config: c,
-		data:   map[string]interface{}{},
-		mu:     new(sync.Mutex),
+		config:       c,
+		data:         map[string]interface{}{},
+		templates:    map[string]*template.Template{},
+		mu:           new(sync.Mutex),
+		templatelock: new(sync.Mutex),
 	}
 }
 
