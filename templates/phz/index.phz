@@ -1,3 +1,12 @@
+#  welcome
+
 this is the homepage! woohoo
+
+
+
+The time is: {{.now}}
+
+Your request was: {{.req}}
+
 
 

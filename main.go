@@ -46,10 +46,12 @@ func main() {
 	log.SetFlags(0)
 	flag.Parse()
 	config := serverlib.NewDefaultConfig()
+	if _, err := toml.DecodeFile(*confpath, config); err != nil {
+		log.Fatalln(err)
+	}
+
 	if *addrflag != "" {
 		config.Addr = *addrflag
-	} else if _, err := toml.DecodeFile(*confpath, config); err != nil {
-		log.Fatalln(err)
 	}
 	srv := serverlib.NewServer(*config)
 	log.Println("Serving http://" + config.Addr)

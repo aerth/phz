@@ -1,6 +1,7 @@
 package phz
 
 import (
+	"bytes"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -8,9 +9,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-func (s *Server) ParseTemplate(templatename string, input []byte, output io.Writer) error {
+func (s *Server) ParseTemplate(templatename string, input interface{}, output io.Writer) error {
 	s.templatelock.Lock()
 	defer s.templatelock.Unlock()
 	if s.templates[templatename] == nil {
@@ -20,7 +22,14 @@ func (s *Server) ParseTemplate(templatename string, input []byte, output io.Writ
 		}
 		s.templates[templatename] = tmpl
 	}
-	return s.templates[templatename].Execute(output, input)
+
+	markdowner := new(bytes.Buffer)
+	if err := s.templates[templatename].Execute(markdowner, input); err != nil {
+		return err
+	}
+	_, err := output.Write(ParseMarkdown(markdowner.Bytes()))
+	return err
+
 }
 
 func (s *Server) gettemplatestring(name string) string {
@@ -45,5 +54,9 @@ func (s *Server) gettemplatestring(name string) string {
 }
 
 func (s *Server) ServeTemplate(w http.ResponseWriter, r *http.Request, path string) error {
-	return s.ParseTemplate(path, nil, w)
+	data := map[string]interface{}{
+		"now": time.Now().UTC(),
+		"req": *r,
+	}
+	return s.ParseTemplate(path, data, w)
 }
