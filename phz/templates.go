@@ -16,11 +16,14 @@ func (s *Server) ParseTemplate(templatename string, input interface{}, output io
 	s.templatelock.Lock()
 	defer s.templatelock.Unlock()
 	if s.templates[templatename] == nil {
+		log.Println("template not found, parsing")
 		tmpl, err := template.New(templatename).Parse(s.gettemplatestring(templatename))
 		if err != nil {
 			return err
 		}
 		s.templates[templatename] = tmpl
+	} else {
+		log.Println("template already exists")
 	}
 
 	markdowner := new(bytes.Buffer)

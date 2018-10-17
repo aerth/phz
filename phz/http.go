@@ -30,7 +30,12 @@ package phz
 
 import (
 	"html/template"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -72,6 +77,36 @@ func NewServer(c Config) *Server {
 }
 
 func (s *Server) ListenAndServe() error {
+	s.templatelock.Lock()
+	var paths []string
+	addpaths := func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".phz") {
+			return nil
+		}
+		paths = append(paths, path)
+		return nil
+	}
+	if err := filepath.Walk(s.config.TemplatePath, addpaths); err != nil {
+		return err
+	}
+
+	log.Printf("Loading %v templates", len(paths))
+	for _, path := range paths {
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		path = strings.TrimPrefix(path, s.config.TemplatePath+"/")
+		tmpl := template.New(path) // full path
+		if _, err := tmpl.Parse(string(b)); err != nil {
+			return err
+		}
+		s.templates[path] = tmpl
+		log.Println("parsed template:", path)
+
+	}
+	s.templatelock.Unlock()
+	log.Println("Serving:", s.config.Addr)
 	return http.ListenAndServe(s.config.Addr, s)
 }
 
