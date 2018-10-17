@@ -70,11 +70,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
 				return
 			} else {
-				log.Println("not found:", r.URL.Path, split[len(split)-1])
 				http.ServeFile(w, r, filepath.Join(s.config.TemplatePath, r.URL.Path))
 				return
 			}
 		}
+		log.Println("not found:", r.URL.Path, split)
 		http.NotFound(w, r)
 		return
 	case "a":

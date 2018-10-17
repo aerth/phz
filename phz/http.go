@@ -42,6 +42,7 @@ var RestrictedPathKeywords = []string{
 type Config struct {
 	Addr         string
 	TemplatePath string
+	Debug        bool
 }
 
 type Server struct {

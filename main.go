@@ -39,19 +39,24 @@ import (
 func main() {
 
 	var (
-		confpath = flag.String("conf", "config.toml", "path to TOML config")
-		addrflag = flag.String("addr", "", "address to override config (format: 127.0.0.1:8080)")
+		confpath  = flag.String("conf", "config.toml", "path to TOML config")
+		addrflag  = flag.String("addr", "", "address to override config (format: 127.0.0.1:8080)")
+		debugflag = flag.Bool("v", false, "verbose / debug logs")
 	)
-
 	log.SetFlags(0)
 	flag.Parse()
 	config := serverlib.NewDefaultConfig()
 	if _, err := toml.DecodeFile(*confpath, config); err != nil {
 		log.Fatalln(err)
 	}
-
 	if *addrflag != "" {
 		config.Addr = *addrflag
+	}
+	if *debugflag {
+		config.Debug = true
+	}
+	if config.Debug {
+		log.SetFlags(log.Ltime | log.Lshortfile)
 	}
 	srv := serverlib.NewServer(*config)
 	log.Println("Serving http://" + config.Addr)
