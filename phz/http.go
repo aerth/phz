@@ -29,6 +29,7 @@
 package phz
 
 import (
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -57,6 +58,7 @@ type Server struct {
 
 	templates    map[string]*template.Template
 	templatelock *sync.Mutex // guards template map
+	template     *template.Template
 }
 
 func NewDefaultConfig() *Config {
@@ -76,6 +78,10 @@ func NewServer(c Config) *Server {
 	}
 }
 
+var globalfuncs = template.FuncMap{
+	"foobar": fmt.Println,
+}
+
 func (s *Server) ListenAndServe() error {
 	s.templatelock.Lock()
 	var paths []string
@@ -91,19 +97,24 @@ func (s *Server) ListenAndServe() error {
 	}
 
 	log.Printf("Loading %v templates", len(paths))
+	s.template = template.New(".root").Funcs(globalfuncs)
 	for _, path := range paths {
+		log.Println("Loading template:", path)
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		path = strings.TrimPrefix(path, s.config.TemplatePath+"/")
-		tmpl := template.New(path) // full path
-		if _, err := tmpl.Parse(string(b)); err != nil {
+		t, err := s.template.New(strings.TrimPrefix(path, s.config.TemplatePath+"/")).Funcs(globalfuncs).Parse(string(b))
+		if err != nil {
 			return err
 		}
-		s.templates[path] = tmpl
-		log.Println("parsed template:", path)
+		log.Println("parsed template:", t.Name())
+		s.templates[t.Name()] = t
 
+	}
+	log.Println("Parsed templates:", len(s.templates))
+	for _, v := range s.templates {
+		log.Printf("\t%s:%s", v.Name(), v.DefinedTemplates())
 	}
 	s.templatelock.Unlock()
 	log.Println("Serving:", s.config.Addr)

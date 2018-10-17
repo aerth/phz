@@ -2,7 +2,6 @@ package phz
 
 import (
 	"bytes"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,24 +12,20 @@ import (
 )
 
 func (s *Server) ParseTemplate(templatename string, input interface{}, output io.Writer) error {
-	s.templatelock.Lock()
-	defer s.templatelock.Unlock()
+	var err error
 	if s.templates[templatename] == nil {
-		log.Println("template not found, parsing")
-		tmpl, err := template.New(templatename).Parse(s.gettemplatestring(templatename))
+		t := s.template.New(templatename)
+		t, err = t.Parse(s.gettemplatestring(templatename))
 		if err != nil {
 			return err
 		}
-		s.templates[templatename] = tmpl
-	} else {
-		log.Println("template already exists")
+		s.templates[templatename] = t
 	}
-
 	markdowner := new(bytes.Buffer)
 	if err := s.templates[templatename].Execute(markdowner, input); err != nil {
 		return err
 	}
-	_, err := output.Write(ParseMarkdown(markdowner.Bytes()))
+	_, err = output.Write(ParseMarkdown(markdowner.Bytes()))
 	return err
 
 }
@@ -51,7 +46,7 @@ func (s *Server) gettemplatestring(name string) string {
 	b, err := ioutil.ReadFile(filepath.Join(s.config.TemplatePath, name))
 	if err != nil {
 		log.Println("Templates:", err)
-		return "errar 3"
+		return "errar 4"
 	}
 	return string(b)
 }

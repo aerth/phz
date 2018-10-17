@@ -67,6 +67,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		split := strings.Split(r.URL.Path, "/")
 		if len(split) > 1 {
 			if strings.HasSuffix(split[len(split)-1], ".phz") {
+
+				log.Println("Parsing PHZ request")
 				s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
 				return
 			} else {

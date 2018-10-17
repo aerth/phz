@@ -1,0 +1,3 @@
+{{define "header.phz"}}
+Header is loaded
+{{end}}
