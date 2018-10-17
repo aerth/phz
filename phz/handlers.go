@@ -37,6 +37,17 @@ import (
 	"time"
 )
 
+func containsBadWords(s ...string) bool {
+	// O(9000)
+	for _, v := range RestrictedPathKeywords {
+		for i := range s {
+			if strings.Contains(s[i], v) {
+				return true
+			}
+		}
+	}
+	return false
+}
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	switch r.Method {
@@ -45,12 +56,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad method", http.StatusMethodNotAllowed)
 		return
 	}
-
-	for _, v := range RestrictedPathKeywords {
-		if strings.Contains(r.URL.Path, v) {
-			http.Error(w, "bad url", http.StatusForbidden)
-			return
-		}
+	if containsBadWords(r.URL.Path) {
+		http.Error(w, "bad url", http.StatusForbidden)
+		return
 	}
 
 	if strings.HasSuffix(r.URL.Path, "/") {

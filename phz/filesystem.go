@@ -18,6 +18,10 @@ func (s *Server) AddWatcher(w *fsnotify.Watcher) {
 					return
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write {
+					if containsBadWords(event.Name) {
+						log.Println("Skipping reload:", event.Name)
+						continue
+					}
 					log.Println("Modified file:", event.Name)
 					if err := s.reloadtemplate(strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")); err != nil {
 
