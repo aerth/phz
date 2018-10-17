@@ -11,18 +11,16 @@ import (
 	"time"
 )
 
-func (s *Server) ParseTemplate(templatename string, input interface{}, output io.Writer) error {
+func (s *Server) ExecuteTemplate(templatename string, input interface{}, output io.Writer) error {
 	var err error
 	if s.templates[templatename] == nil {
-		t := s.template.New(templatename)
-		t, err = t.Parse(s.gettemplatestring(templatename))
-		if err != nil {
+		log.Println("INitializing template:", templatename)
+		if err := s.reloadtemplate(templatename); err != nil {
 			return err
 		}
-		s.templates[templatename] = t
 	}
 	markdowner := new(bytes.Buffer)
-	if err := s.templates[templatename].Execute(markdowner, input); err != nil {
+	if err := s.templates[templatename].ExecuteTemplate(markdowner, templatename, input); err != nil {
 		return err
 	}
 	_, err = output.Write(ParseMarkdown(markdowner.Bytes()))
@@ -30,6 +28,21 @@ func (s *Server) ParseTemplate(templatename string, input interface{}, output io
 
 }
 
+func (s *Server) reloadtemplate(templatename string) error {
+	log.Println("reloading template:", templatename)
+	t, err := s.template.Clone()
+
+	if err != nil {
+		return err
+	}
+
+	t, err = t.New(templatename).Parse(s.gettemplatestring(templatename))
+	if err != nil {
+		return err
+	}
+	s.templates[templatename] = t
+	return nil
+}
 func (s *Server) gettemplatestring(name string) string {
 	if name == "" {
 		return "errar 1"
@@ -56,5 +69,5 @@ func (s *Server) ServeTemplate(w http.ResponseWriter, r *http.Request, path stri
 		"now": time.Now().UTC(),
 		"req": *r,
 	}
-	return s.ParseTemplate(path, data, w)
+	return s.ExecuteTemplate(path, data, w)
 }

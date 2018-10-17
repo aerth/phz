@@ -36,5 +36,6 @@ clean:
 	@rm -v ${NAME}
 
 run:
-	./phzd -conf config.toml.default -addr 0.0.0.0:8080
+	./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
+
 	

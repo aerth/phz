@@ -72,7 +72,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
 				return
 			} else {
-				http.ServeFile(w, r, filepath.Join(s.config.TemplatePath, r.URL.Path))
+				staticfilepath := filepath.Join(s.config.TemplatePath, r.URL.Path)
+				log.Println("Serving static file:", staticfilepath)
+				http.ServeFile(w, r, staticfilepath)
 				return
 			}
 		}

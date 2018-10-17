@@ -34,6 +34,7 @@ import (
 	serverlib "x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
+	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
@@ -58,7 +59,17 @@ func main() {
 	if config.Debug {
 		log.SetFlags(log.Ltime | log.Lshortfile)
 	}
+
 	srv := serverlib.NewServer(*config)
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	srv.AddWatcher(watcher)
+	if err := watcher.Add(config.TemplatePath); err != nil {
+		log.Fatalln(err)
+	}
 	log.Println("Serving http://" + config.Addr)
 	log.Fatalln(srv.ListenAndServe())
 

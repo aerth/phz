@@ -9,5 +9,32 @@ The time is: {{.now}}
 
 Your request was: {{.req}}
 
+### Headers:
+
+{{ range .req.Header }}
+  * {{.}}
+{{ end }}
 
 
+
+
+
+hi
+hi
+hi
+hi
+hi
+hi
+hi
+hi
+hi
+this works
+this works
+this works
+this works
+this works
+this works
+this works
+this works
+this works
+this deos works

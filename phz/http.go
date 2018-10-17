@@ -104,18 +104,12 @@ func (s *Server) ListenAndServe() error {
 		if err != nil {
 			return err
 		}
-		t, err := s.template.New(strings.TrimPrefix(path, s.config.TemplatePath+"/")).Funcs(globalfuncs).Parse(string(b))
-		if err != nil {
-			return err
-		}
-		log.Println("parsed template:", t.Name())
-		s.templates[t.Name()] = t
+		templatename := strings.TrimPrefix(path, s.config.TemplatePath+"/")
+		template.Must(s.template.New(templatename).Funcs(globalfuncs).Parse(string(b)))
+		log.Println("parsed template:", path)
 
 	}
-	log.Println("Parsed templates:", len(s.templates))
-	for _, v := range s.templates {
-		log.Printf("\t%s:%s", v.Name(), v.DefinedTemplates())
-	}
+	log.Printf("\t%s:%s", s.template.Name(), s.template.DefinedTemplates())
 	s.templatelock.Unlock()
 	log.Println("Serving:", s.config.Addr)
 	return http.ListenAndServe(s.config.Addr, s)
