@@ -52,8 +52,8 @@ type Server struct {
 	mu     *sync.Mutex // guards global data map
 	data   map[string]interface{}
 
-	cache        map[string]time.Time
-	templates    map[string]*template.Template
+	cache map[string]time.Time
+	//	templates    map[string]*template.Template
 	templatelock *sync.Mutex        // guards template map
 	template     *template.Template // immutable, dont execute
 
@@ -73,18 +73,22 @@ func NewDefaultConfig() *Config {
 
 func NewServer(c Config) *Server {
 	return &Server{
-		config:       c,
-		template:     template.New(".root"),
-		data:         map[string]interface{}{},
-		templates:    map[string]*template.Template{},
+		config: c,
+		data:   map[string]interface{}{},
+		//		templates:    map[string]*template.Template{},
 		cache:        map[string]time.Time{},
 		mu:           new(sync.Mutex),
 		templatelock: new(sync.Mutex),
-		globalfuncs:  make(template.FuncMap),
+		globalfuncs:  DefaultFuncMap,
 	}
 }
 
 func (s *Server) ListenAndServe() error {
+	t, err := template.New(".root").Funcs(s.globalfuncs).ParseGlob(s.config.TemplatePath + "/*.phz")
+	if err != nil {
+		return err
+	}
+	s.template = t
 	return http.ListenAndServe(s.config.Addr, s)
 }
 

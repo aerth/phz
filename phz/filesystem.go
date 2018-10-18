@@ -25,26 +25,26 @@ func (s *Server) AddWatcher(w *fsnotify.Watcher) {
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
 					templatename := strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")
 					log.Println("deleting template:", templatename)
-					delete(s.templates, templatename)
-					return
+					//delete(s.templates, templatename)
+					continue
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Chmod == fsnotify.Chmod {
 					templatename := strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")
 					log.Println("template modified, reloading:", templatename)
 					if err := s.reloadtemplate(templatename); err != nil {
 						log.Println("Error reloading template after modification:", err)
-						return
+						continue
 					}
 				} else {
 					log.Println("new, unhandled fsnotify event:", event)
-					return
+					continue
 				}
 			case err, ok := <-w.Errors:
 				if !ok {
 					log.Println("fsnotify system down (e 100)")
 					return
 				}
-				log.Println("fsnotify error:", err)
+				log.Println("fsnotify going down,  error:", err)
 				return
 			}
 

@@ -1,22 +1,26 @@
 #  welcome
 
 
-this is the homepage! woohoo
+this is the **homepage**! woohoo
+
+refreshing works
 
 ![img](a100.png)
 
-The time is: {{.now}}
+The time is: {{.Now}}
 
-Your request was: {{.req}}
+Your request was: {{.Req}}
 
 ### Headers:
 
-{{ range .req.Header }}
-  * {{.}}
+{{ range $key, $value := .Req.Header }}
+  * {{ $key }} = {{ $value }}
 {{ end }}
 
 
 ### Links:
-  * [page 2](page2.phz)
-  * [page 3](page3.phz)
+  * [home](/) (tests dynamic phz)
+  * [page 2](page2.phz) (tests plain phz)
+  * [page 3](page3.phz) (tests includes)
+  * [random book](mrsthompson/39515-h/39515-h.htm) (tests skipping actual html files)
 

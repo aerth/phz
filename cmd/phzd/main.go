@@ -94,6 +94,6 @@ func main() {
 	})
 
 	log.Println("Serving http://" + config.Addr)
-	log.Fatalln(srv.ListenAndServe())
+	panic(srv.ListenAndServe())
 
 }

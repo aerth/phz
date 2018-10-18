@@ -49,6 +49,13 @@ func containsBadWords(s ...string) bool {
 	return false
 }
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if s.config.Debug {
+		t1 := time.Now()
+		defer func() {
+			fmt.Fprintf(w, "\nRequest process took %s\n", time.Since(t1))
+		}()
+	}
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	switch r.Method {
 	case http.MethodGet: // ok!
@@ -135,14 +142,16 @@ func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, pathnoslas
 	}
 
 	// print debug all template names
+
 	if s.config.Debug {
-		log.Println("all templates:", s.template.Templates(), s.templates)
-		if s.templates[pathnoslash] != nil {
-			ts := s.templates[pathnoslash].Templates()
-			for i := range ts {
-				log.Println(ts[i].Name())
-			}
-		}
+		log.Println("all templates:", s.template.Templates())
+		/*		if s.templates[pathnoslash] != nil {
+					ts := s.templates[pathnoslash].Templates()
+					for i := range ts {
+						log.Println(ts[i].Name())
+					}
+				}
+		*/
 	}
 
 	return nil

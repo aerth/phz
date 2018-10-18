@@ -19,22 +19,25 @@ var CacheTime = time.Minute
 func (s *Server) executeTemplate(templatename string, input map[string]interface{}, output io.Writer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	t1 := time.Now()
-	var err error
-	if s.templates[templatename] == nil || time.Since(s.cache[templatename]) > CacheTime {
+	t, err := s.template.Clone()
+	if err != nil {
+		return err
+	}
+	/* if s.templates[templatename] == nil || time.Since(s.cache[templatename]) > CacheTime {
 		log.Println("(re)initializing template:", templatename)
 		if err = s.reloadtemplate(templatename); err != nil {
 			return err
 		}
 	}
+	*/
 	// turn the template into html now
 	buf := new(bytes.Buffer)
 	now := time.Now().UTC()
 	input["Now"] = now
-	s.cache[templatename] = now
+	//s.cache[templatename] = now
 	input["Path"] = templatename
-	input["GenTime"] = time.Since(t1)
-	if err = s.templates[templatename].ExecuteTemplate(buf, templatename, input); err != nil {
+	//input["GenTime"] = time.Since(t1)
+	if err = t.ExecuteTemplate(buf, templatename, input); err != nil {
 		return err
 	}
 	_, err = output.Write(ParseMarkdown(buf.Bytes()))
@@ -43,6 +46,12 @@ func (s *Server) executeTemplate(templatename string, input map[string]interface
 }
 
 func (s *Server) reloadtemplate(templatename string) error {
+	strbuf, err := s.gettemplatestring(templatename)
+	if err != nil {
+		return err
+	}
+	_, err = s.template.New(templatename).Parse(strbuf)
+	return err
 	log.Println("reloading template:", templatename)
 	if s.template == nil {
 		return fmt.Errorf("nil template root")
@@ -55,11 +64,13 @@ func (s *Server) reloadtemplate(templatename string) error {
 	if err != nil {
 		return err
 	}
-	t, err = t.New(templatename).Parse(templatebuf)
+	_, err = t.New(templatename).Parse(templatebuf)
 	if err != nil {
+		log.Println("err reloading")
 		return err
 	}
-	s.templates[templatename] = t
+	//s.templates[templatename] = t
+	s.template = t
 	return nil
 }
 
@@ -110,6 +121,13 @@ func (s *Server) loadtemplates() error {
 
 	log.Printf("Loading %v templates", len(paths))
 	s.template = template.New(".root").Funcs(s.globalfuncs)
+	var err error
+	_, err = s.template.ParseGlob(s.config.TemplatePath + "/*.phz")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	log.Println("Includable templates:", s.template.DefinedTemplates())
 	for _, path := range paths {
 		log.Println("Loading template:", path)
 		b, err := ioutil.ReadFile(path)

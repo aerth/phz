@@ -1,6 +1,7 @@
 package phz
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/google/shlex"
@@ -87,30 +87,42 @@ func (s *Server) Error(w http.ResponseWriter, r *http.Request, code int, things 
 func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string) error {
 	t1 := time.Now()
 	log.Println("PHZ handler:", path)
-	t := s.templates[path]
-	if t == nil {
-		if err := s.reloadtemplate(path); err != nil {
-			log.Println("err reloading template:", err)
-			if strings.Contains(err.Error(), "no such") {
-				s.Error(w, r, 404, err)
-				return err
-			}
-			s.Error(w, r, 503, err)
-			return err
-		}
-
+	t, err := s.template.Clone()
+	if err != nil {
+		return err
 	}
-	t = s.templates[path]
+	/*
+			if t == nil {
+				if err := s.reloadtemplate(path); err != nil {
+					log.Println("err reloading template:", err)
+					if strings.Contains(err.Error(), "no such") {
+						s.Error(w, r, 404, err)
+						return err
+					}
+					s.Error(w, r, 503, err)
+					return err
+				}
+
+			}
+		t = s.templates[path]
+	*/
 	if t == nil {
 		log.Println("template not found:", path)
 		http.NotFound(w, r)
 		return fmt.Errorf("not found")
 	}
-	if err := t.Execute(w, s.config.Data); err != nil {
-		log.Println("err template:", err)
+	buf := new(bytes.Buffer)
+	data := map[string]interface{}{}
+	data["Path"] = path
+	data["GenTime"] = time.Since(t1)
+	data["Req"] = r
+	data["Now"] = time.Now().UTC()
+	if err := t.ExecuteTemplate(buf, path, data); err != nil {
 		http.Error(w, "dang", 503)
+		log.Println(t.DefinedTemplates())
+		return fmt.Errorf("Error executing template: %v", err)
 	}
-	fmt.Fprintln(w, time.Since(t1))
+	w.Write(ParseMarkdown(buf.Bytes()))
 	return nil
 
 }
