@@ -85,27 +85,11 @@ func (s *Server) Error(w http.ResponseWriter, r *http.Request, code int, things 
 }
 
 func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string, formdata map[string]interface{}) error {
-	t1 := time.Now()
 	log.Println("PHZ handler:", path)
 	t, err := s.template.Clone()
 	if err != nil {
 		return err
 	}
-	/*
-			if t == nil {
-				if err := s.reloadtemplate(path); err != nil {
-					log.Println("err reloading template:", err)
-					if strings.Contains(err.Error(), "no such") {
-						s.Error(w, r, 404, err)
-						return err
-					}
-					s.Error(w, r, 503, err)
-					return err
-				}
-
-			}
-		t = s.templates[path]
-	*/
 	if t == nil {
 		log.Println("template not found:", path)
 		http.NotFound(w, r)
@@ -114,10 +98,11 @@ func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string,
 	buf := new(bytes.Buffer)
 	data := map[string]interface{}{}
 	data["Path"] = path
-	data["GenTime"] = time.Since(t1)
+	data["GenTime"] = time.Since(formdata["t1"].(time.Time))
 	data["Req"] = r
 	data["Now"] = time.Now().UTC()
 	data["Form"] = formdata
+	data["t1"] = formdata["t1"]
 	if err := t.ExecuteTemplate(buf, path, data); err != nil {
 		http.Error(w, "dang", 503)
 		log.Println(t.DefinedTemplates())
