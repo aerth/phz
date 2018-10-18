@@ -1,1 +1,1 @@
-web: phzd -conf config.toml.default -addr 0.0.0.0:80
+web: phzd -conf testdata/heroku.toml -addr :8080
