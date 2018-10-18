@@ -42,6 +42,9 @@ test: build
 	@echo Running the phz command line interpreter:
 	./phz-cli test.phz
 
+# for heroku
+run-demo: build
+	./phzd -conf config.toml.default -addr 0.0.0.0:80 -v
 
 run: build
 	env -i myapikey=secret11223344 PATH=/usr/bin:/bin:/usr/local/bin ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v

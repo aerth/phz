@@ -1,0 +1,5 @@
+Global Pool Stats
+
+<pre>{{ exec "curl -s https://aquacha.in/status/miners" }}</pre>
+
+Learn more at https://aquacha.in

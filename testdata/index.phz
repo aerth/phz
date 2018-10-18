@@ -1,11 +1,4 @@
-#  welcome
-
-
-this is the **homepage**! woohoo
-
-refreshing works
-
-![img](a100.png)
+# It works!
 
 The time is: {{.Now}}
 
@@ -22,6 +15,7 @@ Your request was: {{.Req}}
   * [home](/?page=about) (tests dynamic phz, rewrite / to index.phz)
   * [page 2](page2.phz) (tests plain markdown with phz suffix)
   * [page 3](page3.phz) (tests includes)
+  * [page 4](page4.phz) (tests system curl request)
   * [random book](mrsthompson/39515-h/39515-h.htm) (tests skipping actual html files)
 
 ### Form Data
@@ -33,13 +27,21 @@ Your request was: {{.Req}}
 ### Login
 
 <form method="POST">
-	<input name="username"></input>
+	<input name="username" placeholder="username"></input>
 	<button type="submit">Login</button>
 </form>
 
 {{ if eq "POST" .Req.Method }}
-Logged in: {{ .Form.post_username }}
+{{ with $username := .Form.post_username | printf "%s" }}
+	Hello, {{ $username }}
+	{{ if eq "root" $username }}
+		{{ template ".admin.phz" }}
+	{{ end }}
+{{ end }}
 {{ end }}
 
 
-{{ 
+[![img](phz.png)](https://gitlab.com/phz-project)
+[![img](go.png)](https://golang.org)
+[![img](markdown.png)](https://daringfireball.net/projects/markdown/)
+

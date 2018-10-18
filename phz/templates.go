@@ -33,7 +33,7 @@ func (s *Server) executeTemplate(templatename string, input map[string]interface
 	// turn the template into html now
 	buf := new(bytes.Buffer)
 	now := time.Now().UTC()
-	input["Now"] = now
+	input["Now"] = now.String()
 	//s.cache[templatename] = now
 	input["Path"] = templatename
 	//input["GenTime"] = time.Since(t1)
