@@ -1,1 +1,1 @@
-web: phzd -conf testdata/heroku.toml -addr :8080
+web: phzd -conf testdata/heroku.toml -addr 0.0.0.0:$PORT
