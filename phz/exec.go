@@ -84,7 +84,7 @@ func (s *Server) Error(w http.ResponseWriter, r *http.Request, code int, things 
 	http.Error(w, http.StatusText(code), code)
 }
 
-func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string) error {
+func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string, formdata map[string]interface{}) error {
 	t1 := time.Now()
 	log.Println("PHZ handler:", path)
 	t, err := s.template.Clone()
@@ -117,6 +117,7 @@ func (s *Server) phzhandler(w http.ResponseWriter, r *http.Request, path string)
 	data["GenTime"] = time.Since(t1)
 	data["Req"] = r
 	data["Now"] = time.Now().UTC()
+	data["Form"] = formdata
 	if err := t.ExecuteTemplate(buf, path, data); err != nil {
 		http.Error(w, "dang", 503)
 		log.Println(t.DefinedTemplates())

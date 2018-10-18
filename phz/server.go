@@ -30,7 +30,11 @@ package phz
 
 import (
 	"html/template"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -84,7 +88,21 @@ func NewServer(c Config) *Server {
 }
 
 func (s *Server) ListenAndServe() error {
-	t, err := template.New(".root").Funcs(s.globalfuncs).ParseGlob(s.config.TemplatePath + "/*.phz")
+	// this works but nope
+	//t, err := template.New(".root").Funcs(s.globalfuncs).ParseGlob(s.config.TemplatePath + "/*.phz")
+
+	t := template.New(".root").Funcs(s.globalfuncs)
+	err := filepath.Walk(s.config.TemplatePath, func(path string, stat os.FileInfo, err error) error {
+		if strings.HasSuffix(path, ".phz") {
+			_, err = t.ParseFiles(path)
+			if err != nil {
+				log.Println("template parser:", err)
+				// ok
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}

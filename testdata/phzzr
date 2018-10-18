@@ -1,3 +1,3 @@
 #!/usr/local/bin/phz
-{{ exec "echo hi" }}
-{{ exec "uname" }}
+{{ exec "echo hello, " }}, {{ exec "uname" }}.
+

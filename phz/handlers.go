@@ -49,9 +49,10 @@ func containsBadWords(s ...string) bool {
 	return false
 }
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	reqdata := map[string]interface{}{}
+	t1 := time.Now()
+	reqdata["t1"] = t1
 	if s.config.Debug {
-		t1 := time.Now()
 		defer func() {
 			fmt.Fprintf(w, "\nRequest process took %s\n", time.Since(t1))
 		}()
@@ -59,6 +60,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	switch r.Method {
 	case http.MethodGet: // ok!
+	case http.MethodPost:
+		r.ParseMultipartForm(1024)
+		for k, v := range r.Form {
+			reqdata["post_"+k] = v
+		}
 	default:
 		s.Error(w, r, http.StatusMethodNotAllowed)
 		return
@@ -87,7 +93,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	filename := filepath.Base(pathnoprefix)
 	if strings.HasSuffix(filename, ".phz") {
 		log.Printf("Serving dynamic phz file: %q from %q", filename, pathnoprefix)
-		if err := s.phzhandler(w, r, pathnoprefix); err != nil {
+		if err := s.phzhandler(w, r, pathnoprefix, reqdata); err != nil {
 			log.Printf("Error serving phz file: %s %v", filename, err)
 		}
 		return

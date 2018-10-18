@@ -24,3 +24,16 @@ Your request was: {{.Req}}
   * [page 3](page3.phz) (tests includes)
   * [random book](mrsthompson/39515-h/39515-h.htm) (tests skipping actual html files)
 
+
+### Login
+
+<form method="POST">
+	<input name="username"></input>
+	<button type="submit">Login</button>
+</form>
+
+{{ if eq "POST" .Req.Method }}
+
+Logged in: {{ .Form.post_username }}
+
+{{ end }}
