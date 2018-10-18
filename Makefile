@@ -35,6 +35,9 @@ install:
 clean:
 	@rm -v ${NAME}
 
+test:
+	go test -v ./...
+
 run:
 	./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 

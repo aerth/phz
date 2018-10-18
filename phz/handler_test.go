@@ -44,6 +44,7 @@ func testone(t *testing.T, path string, wantstatus int) {
 	}
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	buf := new(bytes.Buffer)
 	io.Copy(buf, resp.Body)

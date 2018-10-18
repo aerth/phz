@@ -2,6 +2,7 @@ package phz
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,6 +31,9 @@ func (s *Server) ExecuteTemplate(templatename string, input interface{}, output 
 
 func (s *Server) reloadtemplate(templatename string) error {
 	log.Println("reloading template:", templatename)
+	if s.template == nil {
+		return fmt.Errorf("main template is nil")
+	}
 	t, err := s.template.Clone()
 
 	if err != nil {
