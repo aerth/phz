@@ -54,7 +54,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqdata["t1"] = t1
 	if s.config.Debug {
 		defer func() {
-			fmt.Fprintf(w, "\nRequest process took %s\n", time.Since(t1))
+			fmt.Fprintf(w, "\nRequest process took %s. Powered by <a href='https://phz'>phz</a>!\n", time.Since(t1))
 		}()
 	}
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
@@ -62,12 +62,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet: // ok!
 	case http.MethodPost:
 		r.ParseMultipartForm(1024)
-		for k, v := range r.Form {
+		for k, v := range r.PostForm {
 			reqdata["post_"+k] = v
 		}
 	default:
 		s.Error(w, r, http.StatusMethodNotAllowed)
 		return
+	}
+	for k, v := range r.URL.Query() {
+		reqdata["get_"+k] = v
 	}
 	if containsBadWords(r.URL.Path) {
 		s.Error(w, r, http.StatusForbidden)

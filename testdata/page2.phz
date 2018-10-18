@@ -1,4 +1,15 @@
-this is page 2
+# Page 2
 
+## There should be exactly one `#` on this page
 
-WOOOHOOO
+### Header 3
+
+### Header 4
+
+#### Subsubheader
+
+  * And no asterisks
+
+  * On this page
+
+  * Just headers and lists (bullets)

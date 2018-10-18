@@ -44,7 +44,7 @@ test: build
 
 
 run: build
-	env -i myapikey=secret11223344 ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
+	env -i myapikey=secret11223344 PATH=/usr/bin:/bin:/usr/local/bin ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 
 install:
 	@install -v phz-cli /usr/local/bin/phz
