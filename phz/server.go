@@ -29,15 +29,10 @@
 package phz
 
 import (
-	"fmt"
 	"html/template"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
+	"time"
 )
 
 var RestrictedPathKeywords = []string{
@@ -49,6 +44,7 @@ type Config struct {
 	Addr         string
 	TemplatePath string
 	Debug        bool
+	Data         map[string]interface{} `toml:'data'`
 }
 
 type Server struct {
@@ -56,9 +52,16 @@ type Server struct {
 	mu     *sync.Mutex // guards global data map
 	data   map[string]interface{}
 
+	cache        map[string]time.Time
 	templates    map[string]*template.Template
-	templatelock *sync.Mutex // guards template map
-	template     *template.Template
+	templatelock *sync.Mutex        // guards template map
+	template     *template.Template // immutable, dont execute
+
+	globalfuncs template.FuncMap
+}
+
+func ContainsBadWords(s ...string) bool {
+	return containsBadWords(s...)
 }
 
 func NewDefaultConfig() *Config {
@@ -71,56 +74,28 @@ func NewDefaultConfig() *Config {
 func NewServer(c Config) *Server {
 	return &Server{
 		config:       c,
+		template:     template.New(".root"),
 		data:         map[string]interface{}{},
 		templates:    map[string]*template.Template{},
+		cache:        map[string]time.Time{},
 		mu:           new(sync.Mutex),
 		templatelock: new(sync.Mutex),
+		globalfuncs:  make(template.FuncMap),
 	}
-}
-
-var globalfuncs = template.FuncMap{
-	"foobar": fmt.Println,
 }
 
 func (s *Server) ListenAndServe() error {
-	s.templatelock.Lock()
-	var paths []string
-	addpaths := func(path string, info os.FileInfo, err error) error {
-		if !strings.HasSuffix(path, ".phz") {
-			return nil
-		}
-		paths = append(paths, path)
-		return nil
-	}
-	if err := filepath.Walk(s.config.TemplatePath, addpaths); err != nil {
-		return err
-	}
-
-	log.Printf("Loading %v templates", len(paths))
-	s.template = template.New(".root").Funcs(globalfuncs)
-	for _, path := range paths {
-		log.Println("Loading template:", path)
-		b, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		templatename := strings.TrimPrefix(path, s.config.TemplatePath+"/")
-		template.Must(s.template.New(templatename).Funcs(globalfuncs).Parse(string(b)))
-		log.Println("parsed template:", path)
-
-	}
-	log.Printf("\t%s:%s", s.template.Name(), s.template.DefinedTemplates())
-	s.templatelock.Unlock()
-	log.Println("Serving:", s.config.Addr)
 	return http.ListenAndServe(s.config.Addr, s)
 }
 
+// DataSet sets data
 func (s *Server) DataSet(str string, v interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data[str] = v
 }
 
+// DataGet gets data
 func (s *Server) DataGet(str string) interface{} {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -31,6 +31,8 @@ package main // import "x/phzd"
 import (
 	"flag"
 	"log"
+	"os"
+	"path/filepath"
 	serverlib "x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
@@ -43,11 +45,13 @@ func main() {
 		confpath  = flag.String("conf", "config.toml", "path to TOML config")
 		addrflag  = flag.String("addr", "", "address to override config (format: 127.0.0.1:8080)")
 		debugflag = flag.Bool("v", false, "verbose / debug logs")
+		execflag  = flag.String("exec", "", "execute a phz file, requires -conf")
 	)
 	log.SetFlags(0)
 	flag.Parse()
 	config := serverlib.NewDefaultConfig()
-	if _, err := toml.DecodeFile(*confpath, config); err != nil {
+	_, err := toml.DecodeFile(*confpath, config)
+	if err != nil {
 		log.Fatalln(err)
 	}
 	if *addrflag != "" {
@@ -60,6 +64,13 @@ func main() {
 		log.SetFlags(log.Ltime | log.Lshortfile)
 	}
 
+	if *execflag != "" {
+		if err := config.ExecFile(os.Stdout, *execflag); err != nil {
+			log.Fatalln(err)
+		}
+		return
+	}
+
 	srv := serverlib.NewServer(*config)
 
 	watcher, err := fsnotify.NewWatcher()
@@ -67,9 +78,21 @@ func main() {
 		log.Fatalln(err)
 	}
 	srv.AddWatcher(watcher)
-	if err := watcher.Add(config.TemplatePath); err != nil {
-		log.Fatalln(err)
-	}
+	filepath.Walk(config.TemplatePath, func(path string, info os.FileInfo, err error) error {
+		if serverlib.ContainsBadWords(path) {
+			return nil
+		}
+		if info.IsDir() {
+			log.Println("\t adding listener: " + path)
+			if err := watcher.Add(config.TemplatePath); err != nil {
+				log.Fatalln(err)
+			}
+			return nil
+		}
+
+		return nil
+	})
+
 	log.Println("Serving http://" + config.Addr)
 	log.Fatalln(srv.ListenAndServe())
 

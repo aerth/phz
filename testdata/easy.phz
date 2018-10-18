@@ -1,0 +1,17 @@
+hello world
+
+Now: {{.Now}}
+Filename: {{.Path}}
+This: {{.}}
+
+HomeDir: {{.Env.HOME}}
+
+PWD: {{.Env.PWD}}
+
+WhoAmI: {{.Env.USER}}
+
+Uname: {{ exec "uname -a" }}
+
+ExpandEnv: PWD={{ exec "echo $PWD" }}
+
+

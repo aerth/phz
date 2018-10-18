@@ -53,52 +53,97 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet: // ok!
 	default:
-		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		s.Error(w, r, http.StatusMethodNotAllowed)
 		return
 	}
 	if containsBadWords(r.URL.Path) {
-		http.Error(w, "bad url", http.StatusForbidden)
+		s.Error(w, r, http.StatusForbidden)
 		return
 	}
 
 	if strings.HasSuffix(r.URL.Path, "/") {
 		r.URL.Path += "index.phz"
 	}
-	if strings.HasSuffix(r.URL.Path, ".html") {
-		r.URL.Path = strings.TrimSuffix(r.URL.Path, ".html")
-		r.URL.Path += ".phz"
-	}
-	path := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	log.Println("Checking path[0]:", path[0])
-	switch path[0] {
-	default:
-		split := strings.Split(r.URL.Path, "/")
-		if len(split) > 1 {
-			if strings.HasSuffix(split[len(split)-1], ".phz") {
 
-				log.Println("Parsing PHZ request")
-				s.handleGETphz(w, r, strings.TrimPrefix(r.URL.Path, "/")) // TODO: dry
-				return
-			} else {
-				staticfilepath := filepath.Join(s.config.TemplatePath, r.URL.Path)
-				log.Println("Serving static file:", staticfilepath)
-				http.ServeFile(w, r, staticfilepath)
-				return
-			}
+	for _, old := range []string{".html", ".md"} {
+		if strings.HasSuffix(r.URL.Path, old) {
+			r.URL.Path = strings.TrimSuffix(r.URL.Path, old)
+			r.URL.Path += ".phz"
 		}
-		log.Println("not found:", r.URL.Path, split)
-		http.NotFound(w, r)
+	}
+	pathnoprefix := strings.TrimPrefix(r.URL.Path, "/")
+	pathpart := strings.Split(pathnoprefix, "/")
+
+	if builtinWebHandler(w, r, pathpart) {
 		return
+	}
+	filename := filepath.Base(pathnoprefix)
+	if strings.HasSuffix(filename, ".phz") {
+		log.Printf("Serving dynamic phz file: %q from %q", filename, pathnoprefix)
+		if err := s.phzhandler(w, r, pathnoprefix); err != nil {
+			log.Printf("Error serving phz file: %s %v", filename, err)
+		}
+		return
+	}
+
+	// handle everything else (and 404s)
+	staticfilepath := filepath.Join(s.config.TemplatePath, pathnoprefix)
+	log.Printf("Serving static file: %q from %q", staticfilepath, pathnoprefix)
+	http.ServeFile(w, r, staticfilepath)
+}
+
+func builtinWebHandler(w http.ResponseWriter, r *http.Request, pathpart []string) (handledProperly bool) {
+	switch pathpart[0] {
+	default:
+		return false
 	case "a":
-		fmt.Println("AAA")
+		fmt.Fprintln(w, "AAA")
+		fmt.Fprintln(w)
+		return true
 	case "stats":
-		fmt.Println(time.Now().UTC())
+		fmt.Fprintln(w, time.Now().UTC())
+		fmt.Fprintln(w)
+		return true
 	}
 }
 
-func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, pathnoslash string) {
-	log.Println("PHZ:", pathnoslash)
-	if err := s.ServeTemplate(w, r, pathnoslash); err != nil {
-		log.Println("servtemplate:", err)
+func (s *Server) handleGETphz(w http.ResponseWriter, r *http.Request, pathnoslash string, try int) error {
+	if try > 1 {
+		return fmt.Errorf("too many tries: %s", pathnoslash)
 	}
+	err := s.ServeTemplate(w, r, pathnoslash)
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(err.Error(), "no such template") {
+		log.Println("servtemplate:", err)
+		deps := strings.Split(err.Error(), "no such template ")
+		if len(deps) == 2 {
+			// dependent / include
+			dtmpl := strings.TrimPrefix(strings.TrimSuffix(deps[1], `"`), `"`)
+			log.Println("template depends on", dtmpl, "-- reloading it")
+			if err := s.reloadtemplate(dtmpl); err != nil {
+				log.Println("err reloading", err)
+			}
+			log.Println("relaoding:", pathnoslash)
+			s.reloadtemplate(pathnoslash)
+			return s.handleGETphz(w, r, pathnoslash, try+1)
+
+		}
+	} else {
+		log.Println("Error handling template:", err)
+	}
+
+	// print debug all template names
+	if s.config.Debug {
+		log.Println("all templates:", s.template.Templates(), s.templates)
+		if s.templates[pathnoslash] != nil {
+			ts := s.templates[pathnoslash].Templates()
+			for i := range ts {
+				log.Println(ts[i].Name())
+			}
+		}
+	}
+
+	return nil
 }

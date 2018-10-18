@@ -7,6 +7,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// AddWatcher handles changes in the filesystem, reloading templates if needed ( WIP)
 func (s *Server) AddWatcher(w *fsnotify.Watcher) {
 	go func() {
 		for {
@@ -14,26 +15,37 @@ func (s *Server) AddWatcher(w *fsnotify.Watcher) {
 			select {
 			case event, ok := <-w.Events:
 				if !ok {
-					log.Println("Watcher ded")
+					log.Println("fsnotify system down (e 101)")
 					return
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					if containsBadWords(event.Name) {
-						log.Println("Skipping reload:", event.Name)
-						continue
-					}
-					log.Println("Modified file:", event.Name)
-					if err := s.reloadtemplate(strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")); err != nil {
-
+				if containsBadWords(event.Name) || strings.HasSuffix(event.Name, "~") {
+					log.Println("Skipping reload:", event.Name)
+					continue
+				}
+				if event.Op&fsnotify.Remove == fsnotify.Remove {
+					templatename := strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")
+					log.Println("deleting template:", templatename)
+					delete(s.templates, templatename)
+					return
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Chmod == fsnotify.Chmod {
+					templatename := strings.TrimPrefix(event.Name, s.config.TemplatePath+"/")
+					log.Println("template modified, reloading:", templatename)
+					if err := s.reloadtemplate(templatename); err != nil {
 						log.Println("Error reloading template after modification:", err)
+						return
 					}
+				} else {
+					log.Println("new, unhandled fsnotify event:", event)
+					return
 				}
 			case err, ok := <-w.Errors:
 				if !ok {
-					log.Println("watcher ded?")
+					log.Println("fsnotify system down (e 100)")
 					return
 				}
-				log.Println("fsnotify:", err)
+				log.Println("fsnotify error:", err)
+				return
 			}
 
 		}

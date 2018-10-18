@@ -16,9 +16,7 @@ Your request was: {{.req}}
 {{ end }}
 
 
+### Links:
+  * [page 2](page2.phz)
+  * [page 3](page3.phz)
 
-k
-
-
-
-lol

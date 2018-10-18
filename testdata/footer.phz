@@ -1,0 +1,6 @@
+{{define "footer.phz"}}
+```
+Goodbye
+ - footer
+```
+{{end}}

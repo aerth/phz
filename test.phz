@@ -1,0 +1,30 @@
+# Server Side Variables
+
+Now: {{.Now}}
+
+Foo: {{.Foo}}
+
+HomeDir: {{.Env.HOME}}
+
+PWD: {{.Env.PWD}}
+
+WhoAmI: {{.Env.USER}}
+
+<!-- comment -->
+
+OS Exec: {{ exec "ps" }}
+OS Exec: {{ exec "uname -a" }}
+OS Exec: {{ exec "aquachain --nokeys attach --exec 'aqua.getBlock(1)'" }}
+
+Built-In Aqua:
+
+Latest block: {{ aqua "aqua.getBlock('latest').number" }}
+
+{{/* {{ exec }} Uname: {{ exec uname }} {{end */}}
+
+
+Math Test:
+
+{{ with $x := 100 }}
+	{{ $x }}
+{{ end }}

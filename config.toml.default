@@ -4,7 +4,8 @@
 # Update often, https://gitlab.com/phz-project/phzd
 
 # addr to listen/bind to, interface:port (string)
-addr = "127.0.0.1:8081" # can be 0.0.0.0:8080 for all interfaces
-templatepath = "public_phz"
+addr = "127.0.0.1:8080" # can be 0.0.0.0:8080 for all interfaces
+templatepath = "testdata"
+#templatepath = "public_phz"
 
 

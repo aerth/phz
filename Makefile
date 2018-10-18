@@ -17,7 +17,8 @@ build:
 	@echo 'Building ${NAME} version ${RELEASE}'
 
 	go get -d -x -v .
-	go build -o ${NAME} -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" .
+	go build -o ${NAME} -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" ./cmd/phzd
+	go build -o phz-cli -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" ./cmd/phz-cli
 	@echo 'Successfully built ${NAME}'
 
 
@@ -25,7 +26,7 @@ build:
 ${NAME}: build
 
 
-install:
+install-phzd:
 	@echo 'PREFIX=${PREFIX}'
 
 	@mkdir -p ${PREFIX}
@@ -33,12 +34,21 @@ install:
 	@echo 'Successfully installed ${NAME} to ${PREFIX}'
 
 clean:
-	@rm -v ${NAME}
+	@rm -v ${NAME} phz-cli
 
-test:
-	go test -v ./...
+test: build
+	go test -v ./phz/...
+	go test -v ./cmd/...
+	@echo Running the phz command line interpreter:
+	./phz-cli test.phz
+
 
 run: build
-	./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
+	env -i myapikey=secret11223344 ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 
+install:
+	@install -v phz-cli /usr/local/bin/phz
+	@echo "Successfully installed phz interpreter"
+	@echo "Now you can use '#!/usr/local/bin/phz' in your scripts!"
+	@echo "Try some of the executable scripts in testdata, such as testdata/phzzr"
 	
