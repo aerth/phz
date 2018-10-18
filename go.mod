@@ -1,6 +1,5 @@
 module x/phzd
 
-// +heroku goVersion go1.11.1
 // +heroku install ./cmd/phzd
 
 require (
