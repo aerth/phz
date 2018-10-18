@@ -38,7 +38,7 @@ clean:
 test:
 	go test -v ./...
 
-run:
+run: build
 	./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 
 	
