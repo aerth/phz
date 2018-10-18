@@ -54,7 +54,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqdata["t1"] = t1
 	if s.config.Debug {
 		defer func() {
-			fmt.Fprintf(w, "\nRequest process took %s. Powered by <a href='https://phz'>phz</a>!\n", time.Since(t1))
+			//fmt.Fprintf(w, "\nRequest process took %s. Powered by <a href='https://phz'>phz</a>!\n", time.Since(t1))
+			fmt.Fprintf(w, "\nRequest processed: %s\n", time.Since(t1))
 		}()
 	}
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
