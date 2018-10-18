@@ -1,5 +1,8 @@
 module x/phzd
 
+// +heroku goVersion go1.11.1
+// +heroku install ./cmd/phzd
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/fsnotify/fsnotify v1.4.7
