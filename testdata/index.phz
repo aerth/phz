@@ -37,11 +37,16 @@ Your request was: {{.Req}}
 {{ with $username := .Form.post_username | printf "%s" }}
 	Hello, {{ $username }}
 	{{ if eq "root" $username }}
-		ADMIN
+	ADMIN MODE ACTIVATED <!-- not really ... -->
 	{{ end }}
-{{ end }}
+	Sha256: {{ sha256 $username | printf "0x%x" }}
+	Argon2id: {{ argon2id $username | printf "0x%x" }}
+
 {{ end }}
 
+{{ else }} Hint: try 'root'{{ end }}
+
+Math check: 1024 + 1024 = {{ add 1024 1024 | printf "%b" }}
 
 [![img](phz.png)](https://gitlab.com/phz-project)
 [![img](go.png)](https://golang.org)

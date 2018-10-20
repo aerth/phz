@@ -28,6 +28,12 @@
 
 package tmplutils
 
+import (
+	"crypto/sha256"
+
+	"golang.org/x/crypto/argon2"
+)
+
 // /exec.go:19:14: undefined: tmplutils.Add
 // ./exec.go:20:14: undefined: tmplutils.Minus
 // ./exec.go:21:14: undefined: tmplutils.Div
@@ -45,9 +51,25 @@ func Add(x, y int) int {
 func Minus(x, y int) int {
 	return x - y
 }
-func Div(x, y int) int         { return 0 }
-func Mod(x, y int) int         { return 0 }
-func Mul(x, y int) int         { return 0 }
-func Pow(x, y int) int         { return 0 }
-func Sha256(b []byte) []byte   { return []byte{5, 4, 3, 2, 1} }
-func Argon2id(b []byte) []byte { return []byte{1, 2, 3, 4, 5} }
+func Div(x, y int) int { return 0 }
+func Mod(x, y int) int { return 0 }
+func Mul(x, y int) int { return 0 }
+func Pow(x, y int) int { return 0 }
+func Sha256(v interface{}) []byte {
+	b := sha256.Sum256(any2bytes(v))
+	return b[:]
+
+}
+
+func any2bytes(v interface{}) []byte {
+	var input []byte
+	switch v.(type) {
+	case string:
+		input = []byte(v.(string))
+	case []byte:
+		input = v.([]byte)
+	default:
+	}
+	return input
+}
+func Argon2id(v interface{}) []byte { return argon2.IDKey(any2bytes(v), nil, 1024, 1, 1, 32) }
