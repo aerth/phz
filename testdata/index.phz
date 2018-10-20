@@ -19,6 +19,7 @@ Your request was: {{.Req}}
   * [page 3](page3.phz) (tests includes)
   * [page 4](page4.phz) (tests system curl request)
   * [random book](mrsthompson/39515-h/39515-h.htm) (tests skipping actual html files)
+  * [source code for this web page](https://gitlab.com/phz-project/phzd/tree/master/testdata)
 
 ### Form Data
 
