@@ -40,19 +40,30 @@ import (
 
 var log = logg.New(os.Stderr, "phz: ", 0)
 
-var DefaultFuncMap = map[string]interface{}{
+var DefaultFuncMap = AddMaps(tmplutils.All(), map[string]interface{}{
 	"exec": execstring,
 	"aqua": execaqua,
 
 	// math
-	"add":      tmplutils.Add,
-	"minus":    tmplutils.Minus,
-	"div":      tmplutils.Div,
-	"mod":      tmplutils.Mod,
-	"mul":      tmplutils.Mul,
-	"pow":      tmplutils.Pow,
-	"sha256":   tmplutils.Sha256,
-	"argon2id": tmplutils.Argon2id,
+	/*	"add":      tmplutils.Add,
+		"minus":    tmplutils.Minus,
+		"div":      tmplutils.Div,
+		"mod":      tmplutils.Mod,
+		"mul":      tmplutils.Mul,
+		"pow":      tmplutils.Pow,
+		"sha256":   tmplutils.Sha256,
+		"argon2id": tmplutils.Argon2id,
+	*/
+})
+
+func AddMaps(m ...map[string]interface{}) map[string]interface{} {
+	out := map[string]interface{}{}
+	for _, mm := range m {
+		for i, v := range mm {
+			out[i] = v
+		}
+	}
+	return out
 }
 
 func execstring(s string) string {

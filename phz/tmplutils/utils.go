@@ -30,6 +30,8 @@ package tmplutils
 
 import (
 	"crypto/sha256"
+	"fmt"
+	"html/template"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -43,6 +45,20 @@ import (
 // ./exec.go:25:14: undefined: tmplutils.Sha256
 // ./exec.go:26:14: undefined: tmplutils.Argon2id
 // FAIL    x/phzd/phz [build failed]
+
+func All() map[string]interface{} {
+	return map[string]interface{}{
+		"add":      Add,
+		"minus":    Minus,
+		"div":      Div,
+		"mul":      Mul,
+		"pow":      Pow,
+		"sha256":   Sha256,
+		"argon2id": Argon2id,
+		"safeURL":  func(u string) template.URL { return template.URL(u) },
+		"safeHTML": func(h string) template.HTML { return template.HTML(h) },
+	}
+}
 
 func Add(x, y int) int {
 	return x + y
@@ -68,6 +84,8 @@ func any2bytes(v interface{}) []byte {
 		input = []byte(v.(string))
 	case []byte:
 		input = v.([]byte)
+	case fmt.Stringer:
+		input = []byte(v.(fmt.Stringer).String())
 	default:
 	}
 	return input

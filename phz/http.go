@@ -174,6 +174,11 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	}
 	err = t2.ExecuteTemplate(buf, templatename, inputdata)
 	if err == nil {
+		b := buf.Bytes()
+		if len(b) >= 14 && bytes.Compare(b[:14], []byte("<!DOCTYPE html")) == 0 {
+			w.Write(buf.Bytes())
+			return nil
+		}
 		w.Write(ParseMarkdown(buf.Bytes()))
 		return nil
 	}

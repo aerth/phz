@@ -10,7 +10,7 @@
 
   * any phz files will be parsed, and executed
 
-  * in a phz file you can use markdown and a simple template language
+  * in a phz file you can use markdown and a simple template language (use `<!DOCTYPE html>` to skip markdown processing)
 
   * there are a number of built-in functions
 
