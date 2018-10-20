@@ -167,7 +167,12 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	buf := new(bytes.Buffer)
 	pathnoslash := strings.TrimPrefix(r.URL.Path, "/")
 	templatename := filepath.Base(pathnoslash)
-	err = t.ExecuteTemplate(buf, templatename, inputdata)
+	t2, err := t.Clone()
+	if err != nil {
+		log.Println("err cloning", err)
+		return err
+	}
+	err = t2.ExecuteTemplate(buf, templatename, inputdata)
 	if err == nil {
 		w.Write(ParseMarkdown(buf.Bytes()))
 		return nil
@@ -182,7 +187,7 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	err = t.Execute(buf, inputdata)
+	err = t.ExecuteTemplate(buf, templatename, inputdata)
 	if err == nil {
 		log.Println("Reload experiment 1 PASS")
 		w.Write(ParseMarkdown(buf.Bytes()))

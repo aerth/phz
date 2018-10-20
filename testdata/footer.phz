@@ -1,6 +1,11 @@
-{{define "footer.phz"}}
+
 ```
 Goodbye
  - footer
 ```
-{{end}}
+
+
+[![img](phz.png)](https://gitlab.com/phz-project)
+[![img](go.png)](https://golang.org)
+[![img](markdown.png)](https://daringfireball.net/projects/markdown/)
+

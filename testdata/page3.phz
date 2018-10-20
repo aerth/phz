@@ -1,5 +1,2 @@
 # welcome to page 3
 Will the header.phz stand up?{{template "header.phz"}}This is the body, is there a footer?{{template "footer.phz"}}
-#
-#
-
