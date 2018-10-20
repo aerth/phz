@@ -124,13 +124,13 @@ func getformdata(r *http.Request) map[string]interface{} {
 	case http.MethodPost:
 		r.ParseMultipartForm(1024)
 		for k, v := range r.PostForm {
-			reqdata["post_"+k] = v
+			reqdata["post_"+k] = v[0] // TODO: more than the first value?
 		}
 	default:
 		return nil
 	}
 	for k, v := range r.URL.Query() {
-		reqdata["get_"+k] = v
+		reqdata["get_"+k] = v[0] // TODO: more than the first value?
 	}
 
 	return reqdata
@@ -149,6 +149,7 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	t = t.Option("missingkey=zero").Funcs(s.globalfuncs)
+	log.Println("Funcs:", len(s.globalfuncs))
 	formdata := getformdata(r)
 	if formdata == nil {
 		s.Error(w, r, http.StatusMethodNotAllowed)
@@ -160,6 +161,11 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 		"Req":  *r,
 		"Form": formdata,
 	}
+	hmap := map[string]string{}
+	for i, v := range r.Header {
+		hmap[i] = v[0]
+	}
+	inputdata["Header"] = hmap
 	buf := new(bytes.Buffer)
 	err = t.Execute(buf, inputdata)
 	if err == nil {

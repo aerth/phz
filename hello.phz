@@ -17,6 +17,8 @@ Number of peers: {{ aqua "net.peerCount" }}
 {{/* {{ exec }} Uname: {{ exec uname }} {{end */}}
 
 
-Math Test:
-{{ $x := 100 }}{{ $y := 400 }}{{ $z := 500 }}Adding: {{ add (add $x $y) $z }}
+Math Test:{{ $x := 100 }}{{ $y := 400 }}{{ $z := 500 }}
+
+Adding: {{ add (add $x $y) $z }}
+
 Redefine: {{ $x = minus $y $z }}{{ $x }}

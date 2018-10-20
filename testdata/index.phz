@@ -6,7 +6,9 @@ Your request was: {{.Req}}
 
 ### Headers:
 
-{{ range $key, $value := .Req.Header }}
+{{/* this shows slice: range $key, $value := .Req.Header */}}
+<!-- this way is not a slice: -->
+{{ range $key, $value := .Header }}
   * {{ $key }} = {{ $value }}
 {{ end }}
 

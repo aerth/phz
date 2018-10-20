@@ -26,7 +26,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 package phz
 
 import "os/exec"
@@ -39,7 +38,7 @@ func dummyfunc(name string) func(s string) string {
 
 func init() {
 	// load plugin if aquachain installed, else load dummy
-	DefaultFuncMap["aqua"] = dummyfunc("aqua")
+	DefaultFuncMap["aqua"] = dummyfunc(`["aquachain" is not installed]`)
 	if _, err := exec.LookPath("aquachain"); err == nil {
 		DefaultFuncMap["aqua"] = execaqua
 	}

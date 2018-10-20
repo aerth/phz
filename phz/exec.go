@@ -26,13 +26,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 package phz
 
 import (
 	logg "log"
 	"os"
 	"os/exec"
+	"strings"
 	"x/phzd/phz/tmplutils"
 
 	"github.com/google/shlex"
@@ -68,7 +68,11 @@ func execslice(cmdline []string) string {
 	cmd.Args = cmdline[0:]
 	b, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println(err)
+		log.Println("\t", err)
 	}
-	return string(b)
+	return removenewline(b)
+}
+
+func removenewline(b []byte) string {
+	return strings.TrimSuffix(strings.TrimSpace(string(b)), "\n")
 }
