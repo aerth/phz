@@ -55,6 +55,15 @@ func ContainsBadWords(s ...string) bool {
 	return false
 }
 
+func contains(needle string, haystack []string) bool {
+	for i := range haystack {
+		if needle == haystack[i] {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if isBuiltInHandled(w, r) {
 		return
@@ -68,6 +77,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path += "index.phz"
 	}
 	filename := filepath.Join(s.config.TemplatePath, r.URL.Path)
+
+	if !contains(r.Method, []string{http.MethodGet, http.MethodPost, http.MethodHead}) {
+		s.Error(w, r, http.StatusMethodNotAllowed)
+		return
+	}
 
 	if _, err := os.Stat(filename); err != nil {
 		http.NotFound(w, r)
@@ -123,12 +137,10 @@ func getformdata(r *http.Request) map[string]interface{} {
 }
 
 func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
-	//	t, err := s.template.Clone()
-	//	if err != nil {
-	//		s.Error(w, r, 500)
-	//		return
-	//	}
 	mainfile := filepath.Join(s.config.TemplatePath, r.URL.Path)
+	if s.config.Debug {
+		log.Println("phz running", mainfile)
+	}
 	files := []string{mainfile}
 	t, err := template.ParseFiles(files...)
 	if err != nil {

@@ -27,12 +27,28 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-package phz
+package tmplutils
 
-import (
-	"github.com/russross/blackfriday"
-)
+// /exec.go:19:14: undefined: tmplutils.Add
+// ./exec.go:20:14: undefined: tmplutils.Minus
+// ./exec.go:21:14: undefined: tmplutils.Div
+// ./exec.go:22:14: undefined: tmplutils.Mod
+// ./exec.go:23:14: undefined: tmplutils.Mul
+// ./exec.go:24:14: undefined: tmplutils.Pow
+// ./exec.go:25:14: undefined: tmplutils.Sha256
+// ./exec.go:26:14: undefined: tmplutils.Argon2id
+// FAIL    x/phzd/phz [build failed]
 
-func ParseMarkdown(b []byte) []byte {
-	return blackfriday.Run(b)
+func Add(x, y int) int {
+	return x + y
 }
+
+func Minus(x, y int) int {
+	return x - y
+}
+func Div(x, y int) int         { return 0 }
+func Mod(x, y int) int         { return 0 }
+func Mul(x, y int) int         { return 0 }
+func Pow(x, y int) int         { return 0 }
+func Sha256(b []byte) []byte   { return []byte{5, 4, 3, 2, 1} }
+func Argon2id(b []byte) []byte { return []byte{1, 2, 3, 4, 5} }

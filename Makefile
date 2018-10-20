@@ -5,7 +5,7 @@ NAME ?= phzd
 VERSION ?= 
 PREFIX ?= /usr/local/bin
 VER ?= X
-COMMIT=$(shell git rev-parse --verify --short HEAD)
+COMMIT != git rev-parse --verify --short HEAD
 COMMIT ?= ${VER}
 RELEASE ?= ${VERSION}${COMMIT}
 

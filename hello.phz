@@ -1,0 +1,22 @@
+# Server Side Variables
+
+  * Now: {{.Now}}
+  * HomeDir: {{.Env.HOME}}
+  * PWD: {{.Env.PWD}}
+  * WhoAmI: {{.Env.USER}}
+
+<!-- comments are not printed -->
+
+OS Exec: {{ exec "ps" }}
+OS Exec: {{ exec "uname -a" }}
+
+Built-In Aquachain wrapper:
+Latest block: {{ aqua "aqua.getBlock('latest').number" }}
+Number of peers: {{ aqua "net.peerCount" }}
+
+{{/* {{ exec }} Uname: {{ exec uname }} {{end */}}
+
+
+Math Test:
+{{ $x := 100 }}{{ $y := 400 }}{{ $z := 500 }}Adding: {{ add (add $x $y) $z }}
+Redefine: {{ $x = minus $y $z }}{{ $x }}

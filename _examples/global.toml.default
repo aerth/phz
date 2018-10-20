@@ -1,0 +1,12 @@
+# phzd config
+#
+# Thank you using phz to write your templates!
+#
+# Update often, https://gitlab.com/phz-project
+
+# addr to listen/bind to, interface:port (string)
+# templatepath directory to serve
+
+# addr = "127.0.0.1:8080" # can be 0.0.0.0:8080 for all interfaces
+addr = ":8080"
+templatepath = "/var/www/"
