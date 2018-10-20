@@ -142,13 +142,11 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 		log.Println("phz running", mainfile)
 	}
 	files := []string{mainfile}
-	t, err := template.ParseFiles(files...)
-	if err != nil {
-		log.Println("error parsing template:", err)
-		return err
-	}
-
-	t = t.Option("missingkey=zero").Funcs(s.globalfuncs)
+	t := template.New(".root").Option("missingkey=zero").Funcs(s.globalfuncs)
+	var err error
+	t.ParseFiles(files...)
+	t.ParseGlob(filepath.Join(s.config.TemplatePath, "header.phz"))
+	t.ParseGlob(filepath.Join(s.config.TemplatePath, "footer.phz"))
 	log.Println("Funcs:", len(s.globalfuncs))
 	formdata := getformdata(r)
 	if formdata == nil {
@@ -167,7 +165,9 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	}
 	inputdata["Header"] = hmap
 	buf := new(bytes.Buffer)
-	err = t.Execute(buf, inputdata)
+	pathnoslash := strings.TrimPrefix(r.URL.Path, "/")
+	templatename := filepath.Base(pathnoslash)
+	err = t.ExecuteTemplate(buf, templatename, inputdata)
 	if err == nil {
 		w.Write(ParseMarkdown(buf.Bytes()))
 		return nil
@@ -176,9 +176,8 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	buf.Reset()
 
 	log.Println("Reload experiment 1 START")
-	pathnoslash := strings.TrimPrefix(r.URL.Path, "/")
 	// there was an error in execution
-	if err := s.refreshinclude(pathnoslash, err); err != nil {
+	if err := s.refreshinclude(t, pathnoslash, err); err != nil {
 		log.Println("error refreshing template:", err)
 		return nil
 	}
@@ -194,12 +193,16 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	return err
 }
 
-func (s *Server) reloadtemplate(name string) error {
-	_, err := s.template.ParseFiles(filepath.Join(s.config.TemplatePath, name))
+func (s *Server) reloadtemplate(t *template.Template, name string) error {
+	t, err := t.Clone()
+	if err != nil {
+		return err
+	}
+	_, err = t.ParseFiles(filepath.Join(s.config.TemplatePath, name))
 	return err
 }
 
-func (s *Server) refreshinclude(pathnoslash string, err error) error {
+func (s *Server) refreshinclude(t *template.Template, pathnoslash string, err error) error {
 	if !strings.Contains(err.Error(), "no such template") {
 		return err
 	}
@@ -208,11 +211,11 @@ func (s *Server) refreshinclude(pathnoslash string, err error) error {
 		// dependent / include
 		dtmpl := strings.TrimPrefix(strings.TrimSuffix(deps[1], `"`), `"`)
 		log.Println("template depends on", dtmpl, "-- reloading it")
-		if err := s.reloadtemplate(dtmpl); err != nil {
+		if err := s.reloadtemplate(t, dtmpl); err != nil {
 			log.Println("err reloading", err)
 		}
 		log.Println("relaoding:", pathnoslash)
-		s.reloadtemplate(pathnoslash)
+		s.reloadtemplate(t, pathnoslash)
 	}
 	return nil
 }

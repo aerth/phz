@@ -69,6 +69,7 @@ func execslice(cmdline []string) string {
 	b, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Println("\t", err)
+		return "eror 7"
 	}
 	return removenewline(b)
 }
