@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
+	"io/ioutil"
+	logg "log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,7 +13,10 @@ import (
 )
 
 func init() {
-	log.SetFlags(log.Lshortfile)
+	//	log.SetFlags(logg.Lshortfile)
+	//	log.SetOutput(ioutil.Discard)
+	_ = ioutil.Discard
+	log.SetFlags(logg.Lshortfile)
 }
 
 func TestOne(t *testing.T) {

@@ -31,12 +31,11 @@ package main // import "x/phzd"
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
-	"path/filepath"
 	serverlib "x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
-	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
@@ -49,11 +48,13 @@ func main() {
 	)
 	log.SetFlags(0)
 	flag.Parse()
+	*confpath = os.ExpandEnv(*confpath)
 	config := serverlib.NewDefaultConfig()
 	_, err := toml.DecodeFile(*confpath, config)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	config.TemplatePath = os.ExpandEnv(config.TemplatePath)
 	if *addrflag != "" {
 		config.Addr = *addrflag
 	}
@@ -72,28 +73,7 @@ func main() {
 	}
 
 	srv := serverlib.NewServer(*config)
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	srv.AddWatcher(watcher)
-	filepath.Walk(config.TemplatePath, func(path string, info os.FileInfo, err error) error {
-		if serverlib.ContainsBadWords(path) {
-			return nil
-		}
-		if info.IsDir() {
-			log.Println("\t adding listener: " + path)
-			if err := watcher.Add(config.TemplatePath); err != nil {
-				log.Fatalln(err)
-			}
-			return nil
-		}
-
-		return nil
-	})
-
 	log.Println("Serving http://" + config.Addr)
-	log.Fatalln(srv.ListenAndServe())
+	log.Fatalln(http.ListenAndServe(config.Addr, srv))
 
 }

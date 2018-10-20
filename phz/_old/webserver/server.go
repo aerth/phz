@@ -30,10 +30,19 @@ package phz
 
 import (
 	"html/template"
+	"log"
+	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
+
+var RestrictedPathKeywords = []string{
+	"..", // up
+	"/.", // hidden files
+}
 
 type Config struct {
 	Addr         string
@@ -44,16 +53,19 @@ type Config struct {
 
 type Server struct {
 	config Config
+	mu     *sync.Mutex // guards global data map
+	data   map[string]interface{}
 
-	cache map[string]time.Time // if time.Since(x) < cachetime, serve cache
+	cache map[string]time.Time
+	//	templates    map[string]*template.Template
+	templatelock *sync.Mutex        // guards template map
+	template     *template.Template // immutable, dont execute
 
-	templatelock *sync.RWMutex      // guards root template for copies
-	template     *template.Template // root template, immutable, dont execute
+	globalfuncs template.FuncMap
+}
 
-	globalfuncs template.FuncMap // copied to every execute
-
-	data   map[string]interface{} // global vars, copied to every exec
-	datamu *sync.Mutex            // guards global data map
+func ContainsBadWords(s ...string) bool {
+	return containsBadWords(s...)
 }
 
 func NewDefaultConfig() *Config {
@@ -67,11 +79,47 @@ func NewServer(c Config) *Server {
 	return &Server{
 		config: c,
 		data:   map[string]interface{}{},
-		datamu: new(sync.Mutex),
 		//		templates:    map[string]*template.Template{},
-		template:     template.Must(template.New(".root").Funcs(DefaultFuncMap).ParseGlob(filepath.Join(c.TemplatePath, "*.phz"))),
 		cache:        map[string]time.Time{},
-		templatelock: new(sync.RWMutex),
+		mu:           new(sync.Mutex),
+		templatelock: new(sync.Mutex),
 		globalfuncs:  DefaultFuncMap,
 	}
+}
+
+func (s *Server) ListenAndServe() error {
+	// this works but nope
+	//t, err := template.New(".root").Funcs(s.globalfuncs).ParseGlob(s.config.TemplatePath + "/*.phz")
+
+	t := template.New(".root").Funcs(s.globalfuncs)
+	err := filepath.Walk(s.config.TemplatePath, func(path string, stat os.FileInfo, err error) error {
+		if strings.HasSuffix(path, ".phz") {
+			_, err = t.ParseFiles(path)
+			if err != nil {
+				log.Println("template parser:", err)
+				// ok
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	s.template = t
+	return http.ListenAndServe(s.config.Addr, s)
+}
+
+// DataSet sets data
+func (s *Server) DataSet(str string, v interface{}) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data[str] = v
+}
+
+// DataGet gets data
+func (s *Server) DataGet(str string) interface{} {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.data[str]
 }

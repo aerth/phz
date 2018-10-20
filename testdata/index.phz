@@ -35,7 +35,7 @@ Your request was: {{.Req}}
 {{ with $username := .Form.post_username | printf "%s" }}
 	Hello, {{ $username }}
 	{{ if eq "root" $username }}
-		{{ template ".admin.phz" }}
+		ADMIN
 	{{ end }}
 {{ end }}
 {{ end }}
