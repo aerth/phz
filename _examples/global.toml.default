@@ -10,3 +10,4 @@
 # addr = "127.0.0.1:8080" # can be 0.0.0.0:8080 for all interfaces
 addr = ":8080"
 templatepath = "/var/www/"
+debug = true
