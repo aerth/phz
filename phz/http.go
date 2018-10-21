@@ -64,6 +64,7 @@ func contains(needle string, haystack []string) bool {
 	return false
 }
 
+// ServeHTTP main entrypoint
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if isBuiltInHandled(w, r) {
 		return
@@ -90,15 +91,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.HasSuffix(r.URL.Path, ".phz") {
+		t1 := time.Now()
 		if err := s.ServePHZ(w, r); err != nil {
 			log.Println(err)
 			s.Error(w, r, 503)
 		}
+		fmt.Fprintf(w, "phz processed: %s\n", time.Since(t1))
 		return
 	}
 	http.ServeFile(w, r, filename)
 }
 
+// a few built-ins, can add more
 func isBuiltInHandled(w http.ResponseWriter, r *http.Request) bool {
 	switch r.URL.Path {
 	case "/stats":
@@ -120,34 +124,40 @@ func getformdata(r *http.Request) map[string]interface{} {
 	log.Println(r.Method, r.Host, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	reqdata := map[string]interface{}{}
 	switch r.Method {
-	case http.MethodGet: // ok!
+	case http.MethodGet: // get and post are ok
 	case http.MethodPost:
 		r.ParseMultipartForm(1024)
 		for k, v := range r.PostForm {
 			reqdata["post_"+k] = v[0] // TODO: more than the first value?
 		}
 	default:
-		return nil
+		return nil // if nil, throw err
 	}
 	for k, v := range r.URL.Query() {
-		reqdata["get_"+k] = v[0] // TODO: more than the first value?
+		reqdata["get_"+k] = v[0] // TODO: more than the first value? or get last value?
 	}
-
 	return reqdata
 }
 
 func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
-	mainfile := filepath.Join(s.config.TemplatePath, r.URL.Path)
-	if s.config.Debug {
-		log.Println("phz running", mainfile)
-	}
-	files := []string{mainfile}
-	t := template.New(".root").Option("missingkey=zero").Funcs(s.globalfuncs)
-	var err error
+	var (
+		mainfile = filepath.Join(s.config.TemplatePath, r.URL.Path)
+		files    = []string{mainfile}
+		t        = template.New(".root").Option("missingkey=zero").Funcs(s.globalfuncs)
+		buf      bytes.Buffer
+	)
+	/* if s.config.Debug {
+		log.Println("Funcs:", len(s.globalfuncs))
+		for i, v := range s.globalfuncs {
+			log.Printf("func: %s: %s", i, funcName(v))
+		}
+	} */
+
+	// get file, (prepare for "files soon")
 	t.ParseFiles(files...)
-	t.ParseGlob(filepath.Join(s.config.TemplatePath, "header.phz"))
-	t.ParseGlob(filepath.Join(s.config.TemplatePath, "footer.phz"))
-	log.Println("Funcs:", len(s.globalfuncs))
+
+	// get first level phz files ( even unservable dot files! )
+	t.ParseGlob(filepath.Join(s.config.TemplatePath, "*.phz"))
 	formdata := getformdata(r)
 	if formdata == nil {
 		s.Error(w, r, http.StatusMethodNotAllowed)
@@ -155,16 +165,18 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 	}
 	inputdata := map[string]interface{}{
 		"Now":  time.Now(),
-		"Foo":  "bar",
 		"Req":  *r,
 		"Form": formdata,
 	}
+	// header strings (should use first or last? or join? how to index
+	// easier?)
 	hmap := map[string]string{}
 	for i, v := range r.Header {
 		hmap[i] = v[0]
 	}
 	inputdata["Header"] = hmap
-	buf := new(bytes.Buffer)
+
+	// begin execute
 	pathnoslash := strings.TrimPrefix(r.URL.Path, "/")
 	templatename := filepath.Base(pathnoslash)
 	t2, err := t.Clone()
@@ -172,7 +184,7 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 		log.Println("err cloning", err)
 		return err
 	}
-	err = t2.ExecuteTemplate(buf, templatename, inputdata)
+	err = t2.ExecuteTemplate(&buf, templatename, inputdata)
 	if err == nil {
 		b := buf.Bytes()
 		if len(b) >= 14 && bytes.Compare(b[:14], []byte("<!DOCTYPE html")) == 0 {
@@ -185,14 +197,14 @@ func (s *Server) ServePHZ(w http.ResponseWriter, r *http.Request) error {
 
 	buf.Reset()
 
-	log.Println("Reload experiment 1 START")
+	log.Println("Reload experiment 1, START err:", err)
 	// there was an error in execution
 	if err := s.refreshinclude(t, pathnoslash, err); err != nil {
 		log.Println("error refreshing template:", err)
 		return nil
 	}
 
-	err = t.ExecuteTemplate(buf, templatename, inputdata)
+	err = t.ExecuteTemplate(&buf, templatename, inputdata)
 	if err == nil {
 		log.Println("Reload experiment 1 PASS")
 		w.Write(ParseMarkdown(buf.Bytes()))
