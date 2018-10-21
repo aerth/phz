@@ -33,6 +33,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 	serverlib "x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
@@ -74,6 +75,13 @@ func main() {
 
 	srv := serverlib.NewServer(*config)
 	log.Println("Serving http://" + config.Addr)
-	log.Fatalln(http.ListenAndServe(config.Addr, srv))
+	s := &http.Server{
+		Addr:           config.Addr,
+		Handler:        srv,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   8 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	log.Fatalln(s.ListenAndServe())
 
 }
