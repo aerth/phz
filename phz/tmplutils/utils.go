@@ -32,6 +32,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"html/template"
+	"path/filepath"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -48,7 +49,12 @@ import (
 
 func All() map[string]interface{} {
 	return map[string]interface{}{
-		"add":      Add,
+		"add": func(x ...int) (sum int) {
+			for i := range x {
+				sum += x[i]
+			}
+			return sum
+		},
 		"minus":    Minus,
 		"div":      Div,
 		"mul":      Mul,
@@ -57,6 +63,8 @@ func All() map[string]interface{} {
 		"argon2id": Argon2id,
 		"safeURL":  func(u string) template.URL { return template.URL(u) },
 		"safeHTML": func(h string) template.HTML { return template.HTML(h) },
+		"basename": func(path string) string { return filepath.Base(path) },
+		"join":     func(path ...string) string { return filepath.Join(path...) },
 	}
 }
 
