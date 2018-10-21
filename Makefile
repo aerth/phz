@@ -3,38 +3,35 @@
 
 NAME ?= phzd
 VERSION ?= 
+
+# with a common install location, scripts should work on most platforms.
+#
+# default shebang: #!/usr/local/bin/phz
 PREFIX ?= /usr/local/bin
 VER ?= X
 COMMIT != git rev-parse --verify --short HEAD
 COMMIT ?= ${VER}
 RELEASE ?= ${VERSION}${COMMIT}
-
-
 all:	${NAME}
 
-
-build:
+# build web server
+build: phzd
+phzd:
 	@echo 'Building ${NAME} version ${RELEASE}'
-
 	go get -d -x -v .
 	go build -o ${NAME} -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" ./cmd/phzd
-	go build -o phz-cli -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" ./cmd/phz-cli
 	@echo 'Successfully built ${NAME}'
+phz-cli: build
+	go build -o phz-cli -x --ldflags "-s -extldflags='-static' -X main.version=${RELEASE}" ./cmd/phz-cli
 
-
-
-${NAME}: build
-
-
+# install web server
 install-phzd:
 	@echo 'PREFIX=${PREFIX}'
-
 	@mkdir -p ${PREFIX}
 	@mv ${NAME} ${PREFIX}/${NAME}
 	@echo 'Successfully installed ${NAME} to ${PREFIX}'
-
 clean:
-	@rm -v ${NAME} phz-cli
+	@rm -fv ${NAME} phz-cli
 
 test: build
 	go test -v ./phz/...
@@ -49,7 +46,8 @@ run-demo: build
 run: build
 	env -i myapikey=secret11223344 PATH=/usr/bin:/bin:/usr/local/bin ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 
-install:
+# install phz-cli to /usr/local/bin/phz
+install: phz-cli
 	@install -v phz-cli /usr/local/bin/phz
 	@echo "Successfully installed phz interpreter"
 	@echo "Now you can use '#!/usr/local/bin/phz' in your scripts!"
