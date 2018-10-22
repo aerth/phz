@@ -12,7 +12,7 @@ VER ?= X
 COMMIT != git rev-parse --verify --short HEAD
 COMMIT ?= ${VER}
 RELEASE ?= ${VERSION}${COMMIT}
-all:	${NAME}
+all:	${NAME} phz-cli
 
 # build web server
 build: phzd
@@ -28,7 +28,7 @@ phz-cli: build
 install-phzd:
 	@echo 'PREFIX=${PREFIX}'
 	@mkdir -p ${PREFIX}
-	@mv ${NAME} ${PREFIX}/${NAME}
+	@install ${NAME} ${PREFIX}/${NAME}
 	@echo 'Successfully installed ${NAME} to ${PREFIX}'
 clean:
 	@rm -fv ${NAME} phz-cli
@@ -47,8 +47,10 @@ run: build
 	env -i myapikey=secret11223344 PATH=/usr/bin:/bin:/usr/local/bin ./phzd -conf config.toml.default -addr 0.0.0.0:8080 -v
 
 # install phz-cli to /usr/local/bin/phz
-install: phz-cli
-	@install -v phz-cli /usr/local/bin/phz
+install: install-phzd
+	@echo 'PREFIX=${PREFIX}'
+	@mkdir -p ${PREFIX}
+	@install phz-cli ${PREFIX}/phz
 	@echo "Successfully installed phz interpreter"
 	@echo "Now you can use '#!/usr/local/bin/phz' in your scripts!"
 	@echo "Try some of the executable scripts in testdata, such as testdata/phzzr"
