@@ -1,24 +1,44 @@
-# Server Side Variables
+<!-- phz -->{{/*
 
-  * Now: {{.Now}}
+
+hello.phz - A simple showcase of the current state of the phz language
+
+*/}}# Global Variables
+
   * HomeDir: {{.Env.HOME}}
   * PWD: {{.Env.PWD}}
   * WhoAmI: {{.Env.USER}}
 
-<!-- comments are not printed -->
-
-OS Exec: {{ exec "ps" }}
-OS Exec: {{ exec "uname -a" }}
+# Execution Variables
+  * Now: {{.Now}}
+  * Form: {{.Form}} <!-- web -->
+  * Req: {{.Req}} <!-- web -->
+  * Header: {{.Header}} <!-- web -->
+  * IP: {{.IP}} <!-- web -->
+  * Args: {{.Args}} (first: {{ index .Args 0 }}) <!-- nonweb -->
+  * Host: {{.Host}} <!-- web -->
+<!-- TODO: Cache, TmpFile, Cookie, DB, -->
+# Template Functions
+  * add, minus, mul, div, mod, pow, sha256, argon2id
+  * safeURL, safeHTML
+  * basename, join (rename to pathjoin ?)
+<!-- comments are not printed, but any new-lines afterwards are! -->
+OS Exec (whoami): {{ exec "whoami" }}
+OS Exec (uname -a): {{ exec "uname -a" }}
 
 Built-In Aquachain wrapper:
 Latest block: {{ aqua "aqua.getBlock('latest').number" }}
 Number of peers: {{ aqua "net.peerCount" }}
 
-{{/* {{ exec }} Uname: {{ exec uname }} {{end */}}
+[Math Test] (x = 100, y = 400, z = 500) {{ $x := 100 }}{{ $y := 400 }}{{ $z := 500 }}
+
+Adding: (add x y z) {{ add (add $x $y) $z }}
+
+Redefine: (x = y-z, print x) {{ $x = minus $y $z }}{{ $x }}
+
+[Hashes]
+
+  sha256={{ sha256 "sha256" | printf "%x" }}
+argon2id={{ argon2id "argon2id" | printf "%x" }}
 
 
-Math Test:{{ $x := 100 }}{{ $y := 400 }}{{ $z := 500 }}
-
-Adding: {{ add (add $x $y) $z }}
-
-Redefine: {{ $x = minus $y $z }}{{ $x }}

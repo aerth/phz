@@ -40,7 +40,7 @@ Your request was: {{.Req}}
 	{{ if eq "root" $username }}
 	ADMIN MODE ACTIVATED <!-- not really ... -->
 	{{ end }}
-	Sha256: {{ sha256 $username | printf "0x%x" }}
+	  Sha256: {{ sha256 $username | printf "0x%x" }}
 	Argon2id: {{ argon2id $username | printf "0x%x" }}
 
 {{ end }}
