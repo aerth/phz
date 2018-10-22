@@ -32,7 +32,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"strings"
 	"x/phzd/phz"
 
 	"github.com/BurntSushi/toml"
@@ -42,36 +41,32 @@ func main() {
 	var (
 		configpath = flag.String("conf", "", "config path")
 		debug      = flag.Bool("v", false, "debug mode")
-		err        error
-		envmap     = map[string]string{}
 	)
-
 	flag.Parse()
-
-	// default config, change this
-	conf := &phz.Config{
-		Data: map[string]interface{}{
-			"Env": envmap,
-		},
-		Debug: *debug,
-	}
-
-	// read config into default
+	log.SetFlags(log.Lshortfile)
+	conf := &phz.Config{Debug: *debug}
 	if *configpath != "" {
-		if _, err = toml.DecodeFile(*configpath, conf); err != nil {
+		if _, err := toml.DecodeFile(*configpath, conf); err != nil {
 			log.Fatalln(err)
 		}
 	}
 
-	// read env into config
-	for _, v := range os.Environ() {
-		split := strings.Split(v, "=")
-		key, val := split[0], split[1]
-		envmap[key] = val
-	}
-
-	// execute the phz templates
+	// execute the phz templates, one at a time until any errors
 	for _, filename := range flag.Args() {
+		// dont parse "--" or anything after it (will still be in {{ .Args }})
+		if filename == "--" {
+			break
+		}
+
+		// stop after any bad files (could be args)
+		if _, err := os.Stat(filename); err != nil {
+			if *debug {
+				log.Println(err)
+			}
+			break
+		}
+
+		// parse and execute phz file
 		if err := conf.ExecFile(os.Stdout, filename); err != nil {
 			log.Fatalln(err)
 		}

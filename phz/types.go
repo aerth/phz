@@ -69,7 +69,7 @@ func NewServer(c Config) *Server {
 		data:   map[string]interface{}{},
 		datamu: new(sync.Mutex),
 		//		templates:    map[string]*template.Template{},
-		template:     template.Must(template.New(".root").Funcs(DefaultFuncMap).ParseGlob(filepath.Join(c.TemplatePath, "*.phz"))),
+		template:     template.Must(template.New(".root").Funcs(DefaultFuncMap).Option("missingkey=zero").ParseGlob(filepath.Join(c.TemplatePath, "*.phz"))),
 		cache:        map[string]time.Time{},
 		templatelock: new(sync.RWMutex),
 		globalfuncs:  DefaultFuncMap,

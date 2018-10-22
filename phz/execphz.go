@@ -36,14 +36,24 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
 // Exec a template
 // web server should use this, it doesnt.
 func (c Config) Exec(w io.Writer, path string, b []byte) error {
-	t1 := time.Now()
-	t, err := template.New(path).Funcs(DefaultFuncMap).Parse(string(b))
+	var err error
+	t := template.New(path).Option("missingkey=zero").Funcs(DefaultFuncMap)
+	// includes
+	if c.TemplatePath != "" {
+		t, err = t.ParseGlob(filepath.Join(c.TemplatePath, "*.phz"))
+		if err != nil {
+			return fmt.Errorf("could not parse includable templates, clean up TemplatePath: %v", err)
+		}
+	}
+	t, err = t.Parse(string(b))
 	if err != nil {
 		return err
 	}
@@ -52,7 +62,23 @@ func (c Config) Exec(w io.Writer, path string, b []byte) error {
 	}
 	c.Data["Now"] = time.Now().UTC()
 	c.Data["Path"] = path
-	c.Data["GenTime"] = time.Since(t1)
+	envmap := map[string]string{}
+	for _, v := range os.Environ() {
+		split := strings.Split(v, "=")
+		envmap[split[0]] = split[1]
+	}
+	c.Data["Env"] = envmap
+
+	// dummy web stuff
+	c.Data["Req"] = http.Request{}
+	c.Data["Header"] = map[string]string{}
+	c.Data["Form"] = map[string]string{}
+
+	args := os.Args[0:]
+	if len(args) > 1 {
+		args = args[1:]
+	}
+	c.Data["Args"] = args
 	return t.Execute(w, c.Data)
 }
 
