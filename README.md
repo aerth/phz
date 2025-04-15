@@ -1,5 +1,7 @@
 # phz
 
+its not php
+
 ## phz-cli
 
   * run a single or multiple phz files, print to stdout, debug to stderr
